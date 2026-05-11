@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador: Projeção 2D (Ortográfica) e 3D (Perspectiva)</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #3f0259;
+            color: #c78dfe;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        #canvas-container {
+            width: 600px;
+            height: 400px;
+            background-color: #7204ac;
+            border: 2px solid #ebc3f1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        #controls {
+            margin-top: 20px;
+            width: 600px;
+            background: #7a1dac;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            border: 2px solid #ebc3f1;
+        }
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        select, input[type="range"] {
+            width: 60%;
+            padding: 5px;
+            font-size: 16px;
+        }
+        label {
+            font-weight: bold;
+            width: 35%;
+        }
+        span.value-display {
+            width: 10%;
+            text-align: right;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <h2>A Matemática da Câmera 2D em relação à 3D</h2>
+    
+    <div id="canvas-container"></div>
+
+    <div id="controls">
+        <div class="control-group">
+            <label for="cameraType">Tipo de Lente:</label>
+            <select id="cameraType">
+                <option value="perspective">Lente 3D (Perspectiva - Com volume)</option>
+                <option value="orthographic">Lente 2D (Ortográfica - Sem profundidade visual)</option>
+            </select>
+            <span class="value-display"></span>
+        </div>
+        <div class="control-group">
+            <label for="rotX">Rotação X (Pitch):</label>
+            <input type="range" id="rotX" min="0" max="360" value="45">
+            <span id="valX" class="value-display">45°</span>
+        </div>
+        <div class="control-group">
+            <label for="rotY">Rotação Y (Yaw):</label>
+            <input type="range" id="rotY" min="0" max="360" value="45">
+            <span id="valY" class="value-display">45°</span>
+        </div>
+    </div>
+
+    <script>
+        // 1. Configuração Básica da Cena
+        const width = 600;
+        const height = 400;
+        const aspect = width / height;
+        const container = document.getElementById('canvas-container');
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xecf0f1); // Fundo claro
+
+        // 2. Criação das Câmeras (Lentes)
+        // Câmera de Perspectiva (Simula o olho humano / 3D real)
+        const perspCam = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
+        perspCam.position.z = 5;
+
+        // Câmera Ortográfica (Projeção paralela / Estilo 2D isométrico ou chapado)
+        const orthoSize = 2;
+        const orthoCam = new THREE.OrthographicCamera(
+            -orthoSize * aspect, orthoSize * aspect, 
+            orthoSize, -orthoSize, 
+            0.1, 1000
+        );
+        orthoCam.position.z = 5;
+
+        let currentCam = perspCam;
+
+        // 3. Renderizador WebGL
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        container.appendChild(renderer.domElement);
+
+        // 4. Criação do Objeto (Um cubo com cores por face e bordas marcadas para facilitar a visualização)
+        const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+        const material = new THREE.MeshNormalMaterial(); // Cores baseadas nas normais (lados diferentes = cores diferentes)
+        const cube = new THREE.Mesh(geometry, material);
+        
+        // Adicionando linhas de contorno (wireframe) para ver a distorção matemática
+        const edges = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 }));
+        cube.add(line);
+
+        scene.add(cube);
+
+        // 5. Controles da Interface (HTML -> JavaScript)
+        const selectCam = document.getElementById('cameraType');
+        const sliderX = document.getElementById('rotX');
+        const sliderY = document.getElementById('rotY');
+        const valX = document.getElementById('valX');
+        const valY = document.getElementById('valY');
+
+        // 6. Loop Principal (Game Loop)
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Converte graus do slider para radianos e aplica ao objeto
+            cube.rotation.x = sliderX.value * (Math.PI / 180);
+            cube.rotation.y = sliderY.value * (Math.PI / 180);
+
+            // Atualiza os textos da interface
+            valX.innerText = sliderX.value + "°";
+            valY.innerText = sliderY.value + "°";
+
+            // Define qual câmera o renderizador deve usar
+            currentCam = selectCam.value === 'perspective' ? perspCam : orthoCam;
+
+            // Desenha a cena
+            renderer.render(scene, currentCam);
+        }
+
+        // Inicia o ciclo
+        animate();
+    </script>
+</body>
+</html>

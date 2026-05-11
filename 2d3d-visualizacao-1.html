@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Coordenadas: 2D vs 3D</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #3f0259;
+            color: #c78dfe;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 5px;
+            text-align: center;
+            color: #ebc3f1;
+        }
+        p.subtitle {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #c78dfe;
+            font-size: 14px;
+        }
+        #canvas-container {
+            width: 600px;
+            height: 400px;
+            background-color: #7204ac;
+            border: 2px solid #ebc3f1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        #controls {
+            margin-top: 20px;
+            width: 600px;
+            background: #7a1dac;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            border: 2px solid #ebc3f1;
+        }
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        select, input[type="range"] {
+            width: 60%;
+            padding: 5px;
+            font-size: 16px;
+            background-color: #3f0259;
+            color: #ebc3f1;
+            border: 1px solid #c78dfe;
+            border-radius: 4px;
+        }
+        input[type="range"]:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        label {
+            font-weight: bold;
+            width: 35%;
+        }
+        span.value-display {
+            width: 10%;
+            text-align: right;
+            font-family: monospace;
+            font-size: 16px;
+            color: #ebc3f1;
+        }
+        .disabled-label {
+            color: #5a386b; /* Um roxo mais apagado para o estado inativo */
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <h2>O Espaço de Jogo: X, Y e Z</h2>
+    <p class="subtitle">Observe como a adição da profundidade transforma o objeto e o espaço.</p>
+    
+    <div id="canvas-container"></div>
+
+    <div id="controls">
+        <div class="control-group">
+            <label for="modeSelect">Modo de Dimensão:</label>
+            <select id="modeSelect">
+                <option value="2D">Modo 2D (Quadrado, Planar)</option>
+                <option value="3D">Modo 3D (Cubo, Volumétrico)</option>
+            </select>
+            <span class="value-display"></span>
+        </div>
+        <hr style="border: 1px solid #c78dfe; margin: 15px 0;">
+        <div class="control-group">
+            <label for="posX" style="color: #ff5e5e;">Posição X (Horizontal):</label>
+            <input type="range" id="posX" min="-5" max="5" step="0.1" value="0">
+            <span id="valX" class="value-display">0.0</span>
+        </div>
+        <div class="control-group">
+            <label for="posY" style="color: #5eff8a;">Posição Y (Vertical):</label>
+            <input type="range" id="posY" min="-5" max="5" step="0.1" value="0">
+            <span id="valY" class="value-display">0.0</span>
+        </div>
+        <div class="control-group">
+            <label id="labelZ" for="posZ" style="color: #5eb0ff;" class="disabled-label">Posição Z (Profundidade):</label>
+            <input type="range" id="posZ" min="-5" max="5" step="0.1" value="0" disabled>
+            <span id="valZ" class="value-display disabled-label">0.0</span>
+        </div>
+    </div>
+
+    <script>
+        // 1. Configuração da Cena
+        const width = 600;
+        const height = 400;
+        const container = document.getElementById('canvas-container');
+
+        const scene = new THREE.Scene();
+        // Fundo combinando com o body para integração fluida
+        scene.background = new THREE.Color(0x3f0259);
+
+        // Câmera
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        
+        // Renderizador
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        container.appendChild(renderer.domElement);
+
+        // 2. Auxiliares Visuais
+        // Grade (Grid) com as cores da paleta neon
+        const gridHelper = new THREE.GridHelper(20, 20, 0xebc3f1, 0x7204ac);
+        gridHelper.position.y = -3;
+        scene.add(gridHelper);
+
+        // Eixos (Vermelho=X, Verde=Y, Azul=Z)
+        const axesHelper = new THREE.AxesHelper(6);
+        scene.add(axesHelper);
+
+        // 3. Criação dos Objetos (Quadrado 2D e Cubo 3D)
+        
+        // Objeto 2D (Um plano simples - cor ciano neon)
+        const geom2D = new THREE.PlaneGeometry(2, 2);
+        const mat2D = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+        const square = new THREE.Mesh(geom2D, mat2D);
+        scene.add(square);
+
+        // Objeto 3D (Cubo)
+        const geom3D = new THREE.BoxGeometry(2, 2, 2);
+        const mat3D = new THREE.MeshNormalMaterial(); // Cor muda conforme os lados
+        const cube = new THREE.Mesh(geom3D, mat3D);
+        
+        // Adicionando bordas ao cubo para melhor visualização (rosa claro neon)
+        const edges = new THREE.EdgesGeometry(geom3D);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xebc3f1 }));
+        cube.add(line);
+        
+        scene.add(cube);
+
+        // 4. Elementos da Interface
+        const modeSelect = document.getElementById('modeSelect');
+        const posX = document.getElementById('posX');
+        const posY = document.getElementById('posY');
+        const posZ = document.getElementById('posZ');
+        const valX = document.getElementById('valX');
+        const valY = document.getElementById('valY');
+        const valZ = document.getElementById('valZ');
+        const labelZ = document.getElementById('labelZ');
+
+        // 5. Função para atualizar os estados (2D ou 3D)
+        function updateMode() {
+            // Reseta posições ao trocar de modo
+            posX.value = 0; posY.value = 0; posZ.value = 0;
+
+            if (modeSelect.value === '2D') {
+                square.visible = true;
+                cube.visible = false;
+                gridHelper.visible = false; // Oculta a grade no 2D
+                
+                // Desativa controles Z
+                posZ.disabled = true;
+                labelZ.classList.add('disabled-label');
+                valZ.classList.add('disabled-label');
+
+                // Câmera centralizada de frente
+                camera.position.set(0, 0, 15);
+                camera.lookAt(0, 0, 0);
+            } else {
+                square.visible = false;
+                cube.visible = true;
+                gridHelper.visible = true; // Mostra a grade no 3D
+                
+                // Ativa controles Z
+                posZ.disabled = false;
+                labelZ.classList.remove('disabled-label');
+                valZ.classList.remove('disabled-label');
+
+                // Câmera em ângulo para ver os três eixos
+                camera.position.set(10, 8, 12);
+                camera.lookAt(0, 0, 0);
+            }
+        }
+
+        // Aplica o estado inicial (2D)
+        updateMode();
+
+        // Escuta mudanças no select de modo
+        modeSelect.addEventListener('change', updateMode);
+
+        // 6. Game Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Atualiza os valores na tela com 1 casa decimal
+            valX.innerText = parseFloat(posX.value).toFixed(1);
+            valY.innerText = parseFloat(posY.value).toFixed(1);
+            valZ.innerText = parseFloat(posZ.value).toFixed(1);
+
+            // Seleciona qual objeto está ativo para mover
+            const activeObject = modeSelect.value === '2D' ? square : cube;
+
+            // Aplica os deslocamentos (Translação)
+            activeObject.position.x = parseFloat(posX.value);
+            activeObject.position.y = parseFloat(posY.value);
+            
+            if (modeSelect.value === '3D') {
+                activeObject.position.z = parseFloat(posZ.value);
+            } else {
+                activeObject.position.z = 0; // Fixa Z em zero no modo 2D
+            }
+
+            // Rotação suave no cubo 3D para destacar o volume
+            if (modeSelect.value === '3D') {
+                cube.rotation.x += 0.005;
+                cube.rotation.y += 0.01;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
