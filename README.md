@@ -1,12 +1,12 @@
 # Oficina: Desenvolvimento de Jogos 3D com Panda3D e Python
 
 **Duração:** 3 horas
+
 **Abordagem:** Teórico-Prática
+
 **Objetivo:** Apresentar os conceitos fundamentais do desenvolvimento de jogos 3D, as etapas do processo criativo e técnico, e introduzir os alunos à prática de programação 3D utilizando a engine Panda3D com a linguagem Python.
 
 Esta versão expandida do material incorpora os fundamentos matemáticos e algorítmicos essenciais para o desenvolvimento de jogos, utilizando as referências bibliográficas fornecidas para aprofundar a teoria. O texto agora detalha a física da movimentação, a lógica de interação em ambientes tridimensionais e mecanismos clássicos de jogabilidade.
-
----
 
 # Parte 1: Conceitos Chave e Teoria
 
