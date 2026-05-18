@@ -8,7 +8,7 @@ O **Panda3D** é um motor de jogo (*game engine*) e um *framework* de renderiza�
 
 ### Um pouco de história
 
-O motor tem uma origem fascinante: foi desenvolvido inicialmente em 2002 pelo **Disney VR Studio** para a criação de atrações de realidade virtual em parques temáticos e para o desenvolvimento do famoso MMORPG *Toontown Online*. Pouco tempo depois, a Disney formou uma parceria com a **Carnegie Mellon University (CMU)**, abrindo o código da ferramenta para uso acadêmico e comercial. Até hoje, o Panda3D é mantido de forma colaborativa por uma comunidade global de desenvolvedores.
+O motor  foi desenvolvido inicialmente em 2002 pelo **Disney VR Studio** para a criação de atrações de realidade virtual em parques temáticos e para o desenvolvimento do famoso MMORPG *Toontown Online*. Pouco tempo depois, a Disney formou uma parceria com a **Carnegie Mellon University (CMU)**, abrindo o código da ferramenta para uso acadêmico e comercial. Até hoje, o Panda3D é mantido de forma colaborativa por uma comunidade global de desenvolvedores.
 
 ### Linguagens Suportadas
 
@@ -305,12 +305,6 @@ if __name__ == "__main__":
     app.run()
 
 ```
-
-Com certeza. Para enriquecer o material da oficina, a implementação de um sistema de câmera customizado é um excelente acréscimo. Em jogos 3D, o controle da câmera dita a perspectiva e a jogabilidade (terceira pessoa, primeira pessoa, isométrica).
-
-No Panda3D, em vez de recorrer a equações trigonométricas complexas para orbitar a câmera ao redor de um personagem, utilizamos uma solução elegante baseada diretamente no conceito de **Grafo de Cena (Scene Graph)** ensinado na Seção 1: o uso de um **Nó Pivô (Pivot Node)**.
-
-Aqui está o conteúdo estruturado para ser inserido como a **Seção 4** (remanejando as demais consecutivamente) ou como um capítulo intermediário focado em visualização:
 
 ## Controle de Câmera Dinâmico (Órbita e Zoom)
 
