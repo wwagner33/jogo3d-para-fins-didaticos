@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
 ```
 
-## Interface de Utilizador (Menu Principal)
+## Interface de Usuário (Menu Principal)
 
 A criação de um ecrã inicial interativo utilizando o `aspect2d` (o espaço 2D dedicado às interfaces do Panda3D).
 
