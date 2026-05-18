@@ -4,7 +4,7 @@ _Por Wellington Sarmento_
 
 ## Introdução
 
-O **Panda3D** é um motor de jogo (*game engine*) e um *framework* de renderização 3D de código aberto (*open-source*). Diferente de ferramentas focadas puramente em interfaces visuais de arrastar-e-soltar, o Panda3D é centrado no desenvolvedor, oferecendo um controle granular sobre a renderização e a lógica do jogo diretamente através do código.
+O **Panda3D** ([https://www.panda3d.org/](https://www.panda3d.org/)) é um motor de jogo (*game engine*) e um *framework* de renderização 3D de código aberto (*open-source*). Diferente de ferramentas focadas puramente em interfaces visuais de arrastar-e-soltar, o Panda3D é centrado no desenvolvedor, oferecendo um controle granular sobre a renderização e a lógica do jogo diretamente através do código.
 
 ### Um pouco de história
 
