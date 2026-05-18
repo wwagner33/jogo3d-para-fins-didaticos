@@ -27,9 +27,9 @@ Entre os seus recursos, destacam-se:
 Neste tutorial, exploraremos de forma prática como utilizar essa arquitetura poderosa, aliada à simplicidade da sintaxe Python, para dar vida a um jogo 3D completo.
 
 
-## Inicialização e o Grafo de Cena (Scene Graph)
+## Inicialização e o Grafo de Cena (_Scene Graph_)
 
-O conceito central do Panda3D. Tudo o que é visível no mundo 3D tem de estar afixado ao nó principal chamado `render`.
+O _Scene Graph_ é o conceito central do Panda3D. Tudo o que é visível no mundo 3D tem de estar afixado ao **nó principal** chamado `render`.
 
 ```python
 from direct.showbase.ShowBase import ShowBase
@@ -302,6 +302,92 @@ class ArenaFugaCompleta(ShowBase):
 
 if __name__ == "__main__":
     app = ArenaFugaCompleta()
+    app.run()
+
+```
+
+Com certeza. Para enriquecer o material da oficina, a implementação de um sistema de câmera customizado é um excelente acréscimo. Em jogos 3D, o controle da câmera dita a perspectiva e a jogabilidade (terceira pessoa, primeira pessoa, isométrica).
+
+No Panda3D, em vez de recorrer a equações trigonométricas complexas para orbitar a câmera ao redor de um personagem, utilizamos uma solução elegante baseada diretamente no conceito de **Grafo de Cena (Scene Graph)** ensinado na Seção 1: o uso de um **Nó Pivô (Pivot Node)**.
+
+Aqui está o conteúdo estruturado para ser inserido como a **Seção 4** (remanejando as demais consecutivamente) ou como um capítulo intermediário focado em visualização:
+
+## Controle de Câmera Dinâmico (Órbita e Zoom)
+
+Por padrão, o Panda3D ativa um controle de câmera automático via mouse (*Trackball*). Para jogos, no entanto, precisamos desativar esse comportamento padrão e criar um script customizado.
+
+Nesta etapa, criaremos uma **Câmera de Terceira Pessoa Orbital**. Utilizaremos a hierarquia do Grafo de Cena a nosso favor: criaremos um nó invisível chamado "Pivô" na mesma posição do jogador. Ao tornarmos a câmera "filha" desse pivô e rotacionarmos o pivô com o mouse, a câmera orbitará o alvo automaticamente, mantendo-se sempre voltada para ele.
+
+```python
+from direct.showbase.ShowBase import ShowBase
+from panda3d.core import loadPrcFileData
+import sys
+
+# Configuração da janela
+loadPrcFileData('', 'window-title Controle de Camera Orbital')
+loadPrcFileData('', 'win-size 800 600')
+
+class CameraOrbital(ShowBase):
+    def __init__(self):
+        # 1. Inicializa o motor
+        ShowBase.__init__(self)
+        self.setBackgroundColor(0.1, 0.1, 0.1)
+
+        # 2. Desativa o controle automático do mouse padrão do Panda3D
+        self.disableMouse()
+
+        # 3. Carrega o modelo do personagem (Alvo da Câmera)
+        self.jogador = self.loader.loadModel("models/panda-model")
+        self.jogador.reparentTo(self.render)
+        self.jogador.setScale(0.005)
+        self.jogador.setPos(0, 0, 0)
+
+        # 4. CONCEITO DO GRAFO DE CENA: Criação do Nó Pivô
+        # Criamos um nó vazio anexado diretamente ao render
+        self.pivo_camera = self.render.attachNewNode("PivoCamera")
+        self.pivo_camera.setPos(self.jogador.getPos()) # Centralizado no jogador
+
+        # Tornamos a Câmera nativa (self.cam) FILHA do Pivô
+        self.cam.reparentTo(self.pivo_camera)
+        
+        # Define a posição LOCAL da câmera em relação ao seu pai (o pivô)
+        # Y = -40 (afastada 40 unidades para trás), Z = 8 (subida 8 unidades)
+        self.cam.setPos(0, -40, 8)
+        self.cam.lookAt(self.pivo_camera) # Força a câmera a olhar para o centro do pivô
+
+        # 5. Controles de Zoom (Leitura dos eventos de rolagem do mouse)
+        self.accept("wheel_up", self.ajustar_zoom, [-2.0])
+        self.accept("wheel_down", self.ajustar_zoom, [2.0])
+        self.accept("escape", sys.exit)
+
+        # 6. Adiciona a tarefa de atualização da câmera ao Game Loop
+        self.taskMgr.add(self.atualizar_camera, "AtualizarCamera")
+
+    def ajustar_zoom(self, quantidade):
+        """Altera a distância da câmera movendo-a no eixo local Y do pivô"""
+        nova_distancia = self.cam.getY() - quantidade
+        
+        # Limita o zoom (Clamping) para evitar que a câmera atravesse o modelo ou se afaste demais
+        nova_distancia = max(min(nova_distancia, -10.0), -80.0)
+        self.cam.setY(nova_distancia)
+
+    def atualizar_camera(self, task):
+        """Captura a posição do mouse e rotaciona o pivô a cada frame"""
+        if self.mouseWatcherNode.hasMouse():
+            # Captura as coordenadas do mouse na janela (variam de -1.0 a 1.0)
+            mouse_x = self.mouseWatcherNode.getMouseX()
+            mouse_y = self.mouseWatcherNode.getMouseY()
+
+            # Rotaciona o Nó Pivô. Como a câmera é filha dele, ela orbita o centro automaticamente.
+            # Heading (H): Rotação no eixo Z (olhar para os lados / rotação horizontal)
+            # Pitch (P): Rotação no eixo X (olhar para cima e para baixo / inclinação vertical)
+            self.pivo_camera.setH(-mouse_x * 180)
+            self.pivo_camera.setP(mouse_y * 45)
+
+        return task.cont
+
+if __name__ == "__main__":
+    app = CameraOrbital()
     app.run()
 
 ```
