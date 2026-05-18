@@ -19,7 +19,7 @@ A arquitetura do motor baseia-se fortemente no padrão de **Grafo de Cena** (*Sc
 
 Entre os seus recursos, destacam-se:
 
-* **Integração de Física:** Suporte nativo a motores físicos robustos como o *Bullet Physics* e o *ODE*, permitindo a criação de Corpos Cinemáticos (*Kinematic Bodies*) e Dinâmicos complexos.
+* **Integração de Física:** Suporte nativo a motores físicos robustos como o *Bullet Physics* e o *Open Dynamics Engine (ODE)*, permitindo a criação de Corpos Cinemáticos (*Kinematic Bodies*) e Dinâmicos complexos.
 * **Pipeline de Assets Flexível:** Ferramentas nativas para importar modelos e animações de softwares como o Blender, utilizando o formato legível e aberto `.egg` para desenvolvimento e o formato binário otimizado `.bam` para o produto final.
 * **Sistemas de Partículas e Shaders:** Renderização avançada capaz de lidar com sombras em tempo real, mapeamento normal e simulações complexas, utilizando tanto o *pipeline* fixo quanto *shaders* programáveis.
 * **Gestor de Tarefas (Task Manager):** Um sistema próprio de multi-tarefas (*coroutines*) que substitui a necessidade de *threads* complexas, permitindo rodar funções a cada *frame* (*Game Loop*) de forma simples e segura.
