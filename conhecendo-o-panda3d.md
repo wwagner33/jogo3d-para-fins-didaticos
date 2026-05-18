@@ -12,10 +12,10 @@ O motor  foi desenvolvido inicialmente em 2002 pelo **Disney VR Studio** para a 
 
 ### Linguagens Suportadas
 
-A arquitetura do Panda3D foi projetada para extrair o melhor de dois mundos. O núcleo da *engine* é inteiramente escrito em **C++**, garantindo processamento de alto desempenho, cálculos matemáticos ultrarrápidos e otimização de memória. No entanto, ele foi concebido com uma integração profunda e nativa para **Python**. Isso significa que você pode escrever toda a lógica do jogo, _scripts_ e interações de forma ágil e limpa em **Python**, enquanto o motor em **C++** lida com o trabalho pesado nos bastidores de forma transparente.
+A arquitetura do Panda3D foi projetada para extrair o melhor de dois mundos. O núcleo da *engine* é inteiramente escrito em **C++**, garantindo processamento de alto desempenho, cálculos matemáticos ultrarrápidos e otimização de memória. No entanto, ele foi concebido com uma integração profunda e nativa para **Python**. Isso significa que você pode escrever toda a lógica do jogo, _scripts_ e interações de forma ágil e limpa em [Python](https://docs.panda3d.org/1.10/python/introduction/index), enquanto o motor em [C++](https://docs.panda3d.org/1.10/cpp/introduction/index) lida com o trabalho pesado nos bastidores de forma transparente.
 
 ### Principais Recursos e Arquitetura
-A arquitetura do motor baseia-se fortemente no padrão de **Grafo de Cena** (*Scene Graph*). Em vez de processar listas lineares de objetos, o Panda3D organiza o espaço tridimensional em uma árvore hierárquica de nós (*nodes*). Se um nó pai for movido ou ocultado, todos os seus "filhos" herdarão essas transformações automaticamente.
+A arquitetura do motor baseia-se fortemente no padrão de **Grafo de Cena** (*Scene Graph*). Em vez de processar listas lineares de objetos, o Panda3D organiza o espaço tridimensional em uma árvore hierárquica de nós (*nodes*). Se um **nó pai** for movido ou ocultado, todos os seus "filhos" herdarão essas transformações automaticamente.
 
 Entre os seus recursos, destacam-se:
 
@@ -25,7 +25,6 @@ Entre os seus recursos, destacam-se:
 * **Gestor de Tarefas (Task Manager):** Um sistema próprio de multi-tarefas (*coroutines*) que substitui a necessidade de *threads* complexas, permitindo rodar funções a cada *frame* (*Game Loop*) de forma simples e segura.
 
 Neste tutorial, exploraremos de forma prática como utilizar essa arquitetura poderosa, aliada à simplicidade da sintaxe Python, para dar vida a um jogo 3D completo.
-
 
 ## Inicialização e o Grafo de Cena (_Scene Graph_)
 
