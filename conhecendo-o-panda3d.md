@@ -4,7 +4,7 @@ _Por Wellington Sarmento_
 
 ## Introdução
 
-O **Panda3D** ([https://www.panda3d.org/](https://www.panda3d.org/)) é um motor de jogo (*game engine*) e um *framework* de renderização 3D de código aberto (*open-source*). Diferente de ferramentas focadas puramente em interfaces visuais de arrastar-e-soltar, o Panda3D é centrado no desenvolvedor, oferecendo um controle granular sobre a renderização e a lógica do jogo diretamente através do código.
+O **Panda3D** ([https://www.panda3d.org/](https://www.panda3d.org/)) é um motor de jogo (*game engine*) e um *framework* de renderização 3D de código aberto (*open-source*). Diferente de ferramentas focadas puramente em interfaces visuais de arrastar-e-soltar, o Panda3D é utilizado na forma de biblioteca de funções e classes, oferecendo um controle granular sobre a renderização e a lógica do jogo diretamente através do código.
 
 ### Um pouco de história
 
@@ -15,86 +15,69 @@ O motor  foi desenvolvido inicialmente em 2002 pelo **Disney VR Studio** para a 
 A arquitetura do Panda3D foi projetada para extrair o melhor de dois mundos. O núcleo da *engine* é inteiramente escrito em **C++**, garantindo processamento de alto desempenho, cálculos matemáticos ultrarrápidos e otimização de memória. No entanto, ele foi concebido com uma integração profunda e nativa para **Python**. Isso significa que você pode escrever toda a lógica do jogo, _scripts_ e interações de forma ágil e limpa em [Python](https://docs.panda3d.org/1.10/python/introduction/index), enquanto o motor em [C++](https://docs.panda3d.org/1.10/cpp/introduction/index) lida com o trabalho pesado nos bastidores de forma transparente.
 
 ### Principais Recursos e Arquitetura
-A arquitetura do motor baseia-se fortemente no padrão de **Grafo de Cena** (*Scene Graph*). Em vez de processar listas lineares de objetos, o Panda3D organiza o espaço tridimensional em uma árvore hierárquica de nós (*nodes*). Se um **nó pai** for movido ou ocultado, todos os seus "filhos" herdarão essas transformações automaticamente.
 
-Entre os seus recursos, destacam-se:
+A arquitetura do Panda3D diferencia-se pela sua abordagem híbrida: um núcleo escrito em C++, totalmente exposto para uma camada de _script_ em Python. O motor baseia-se fortemente no padrão de **Grafo de Cena** (*Scene Graph*). Em vez de processar listas lineares de objetos, o Panda3D organiza o espaço tridimensional em uma árvore hierárquica de nós (*nodes*), onde a raiz universal é chamada de `render`. Se um **nó pai** sofrer uma transformação (como translação, rotação ou escala) ou for ocultado, todos os seus nós "filhos" herdarão essas propriedades automaticamente.
 
-* **Integração de Física:** Suporte nativo a motores físicos robustos como o *Bullet Physics* e o *Open Dynamics Engine (ODE)*, permitindo a criação de Corpos Cinemáticos (*Kinematic Bodies*) e Dinâmicos complexos.
-* **Pipeline de Assets Flexível:** Ferramentas nativas para importar modelos e animações de softwares como o Blender, utilizando o formato legível e aberto `.egg` para desenvolvimento e o formato binário otimizado `.bam` para o produto final.
-* **Sistemas de Partículas e Shaders:** Renderização avançada capaz de lidar com sombras em tempo real, mapeamento normal e simulações complexas, utilizando tanto o *pipeline* fixo quanto *shaders* programáveis.
-* **Gestor de Tarefas (Task Manager):** Um sistema próprio de multi-tarefas (*coroutines*) que substitui a necessidade de *threads* complexas, permitindo rodar funções a cada *frame* (*Game Loop*) de forma simples e segura.
+Abaixo, detalhamos os principais componentes arquiteturais, acompanhados de exemplos práticos de implementação.
 
-Neste tutorial, exploraremos de forma prática como utilizar essa arquitetura poderosa, aliada à simplicidade da sintaxe Python, para dar vida a um jogo 3D completo.
+#### 1. O Grafo de Cena (Scene Graph) e Manipulação de Nós
 
-## Inicialização e o Grafo de Cena (_Scene Graph_)
-
-O _Scene Graph_ é o conceito central do Panda3D. Tudo o que é visível no mundo 3D tem de estar afixado ao **nó principal** chamado `render`.
+Cada elemento no espaço 3D é um `NodePath`, que atua como um ponteiro para um nó no grafo. A manipulação estruturada permite otimizar o gerenciamento de transformações espaciais e a visibilidade dos objetos.
 
 ```python
 from direct.showbase.ShowBase import ShowBase
 
-class InicializacaoPanda(ShowBase):
+class Game(ShowBase):
     def __init__(self):
-        # 1. Inicializa o motor do jogo
         ShowBase.__init__(self)
         
-        # 2. Exemplo prático de manipulação do Scene Graph:
-        # Alterar a cor de fundo da câmara principal
-        self.setBackgroundColor(0.1, 0.1, 0.2)
-
-if __name__ == "__main__":
-    app = InicializacaoPanda()
-    app.run()
+        # Carrega um modelo (gera um NodePath)
+        self.carro_pai = self.loader.loadModel("models/carro")
+        self.carro_pai.reparentTo(self.render) # Define como filho da raiz espacial
+        self.carro_pai.setPos(0, 10, 0)
+        
+        # Adiciona um objeto filho (ex: uma roda)
+        self.roda_filho = self.loader.loadModel("models/roda")
+        self.roda_filho.reparentTo(self.carro_pai)
+        self.roda_filho.setPos(1, 0, 0) 
+        # Se self.carro_pai for movido, self.roda_filho moverá junto mantendo o offset
 
 ```
 
-## Interface de Usuário (Menu Principal)
+#### 2. Gestor de Tarefas (Task Manager) e o Game Loop
 
-A criação de um ecrã inicial interativo utilizando o `aspect2d` (o espaço 2D dedicado às interfaces do Panda3D).
+O Panda3D gerencia o ciclo principal do jogo (*Game Loop*) por meio do `taskMgr`. Em vez de forçar o desenvolvedor a lidar com o gerenciamento manual de *threads* assíncronas (o que frequentemente gera condições de corrida), o motor utiliza um sistema assíncrono cooperativo baseado em tarefas (*coroutines*) executadas a cada quadro.
 
 ```python
-from direct.showbase.ShowBase import ShowBase
-from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenText
-from direct.gui.OnscreenText import TextNode
-import sys
+    def iniciar_loop(self):
+        # Agenda a tarefa para rodar a cada frame
+        self.taskMgr.add(self.atualizar_jogo, "TarefaAtualizar")
 
-class MenuJogo(ShowBase):
-    def __init__(self):
-        ShowBase.__init__(self)
-        self.setBackgroundColor(0.2, 0.2, 0.3)
-        
-        # Contentor principal do menu
-        self.menu_principal = DirectFrame(frameColor=(0, 0, 0, 0.7),
-                                         frameSize=(-0.5, 0.5, -0.7, 0.7))
-
-        # Título
-        OnscreenText(text="MEU JOGO 3D", parent=self.menu_principal,
-                     pos=(0, 0.5), scale=0.1, fg=(1, 1, 1, 1), align=TextNode.ACenter)
-
-        # Botões
-        self.btn_play = DirectButton(text="Jogar", scale=0.1, pos=(0, 0, 0.2),
-                                    parent=self.menu_principal, command=self.iniciar_jogo)
-
-        self.btn_tutorial = DirectButton(text="Tutorial", scale=0.1, pos=(0, 0, -0.1),
-                                        parent=self.menu_principal, command=self.mostrar_tutorial)
-
-        self.btn_sair = DirectButton(text="Sair", scale=0.1, pos=(0, 0, -0.4),
-                                     parent=self.menu_principal, command=sys.exit)
-
-    def iniciar_jogo(self):
-        print("A iniciar o jogo...")
-        self.menu_principal.hide() # Esconde o menu 
-
-    def mostrar_tutorial(self):
-        print("Tutorial: Utilize as teclas W, A, S, D para se mover!")
-
-if __name__ == "__main__":
-    app = MenuJogo()
-    app.run()
+    def atualizar_jogo(self, task):
+        dt = globalClock.getDt() # Tempo decorrido desde o último frame
+        # Rotaciona o carro baseado no tempo
+        self.carro_pai.setH(self.carro_pai.getH() + 30 * dt)
+        return task.cont # Diz ao Task Manager para continuar executando nos próximos frames
 
 ```
 
-## Movimentação Básica e Eventos de Teclado
+#### 3. Suporte a Dispositivos de Entrada (Input Devices)
+
+O motor captura eventos periféricos de forma reativa através de um sistema de mensageria interno (`Messenger`). Ele oferece suporte nativo e unificado para teclado, mouse e mapeamento analógico/digital para *gamepads* (controles de Xbox, PlayStation, etc.).
+
+```python
+    def configurar_controles(self):
+        # Eventos discretos de teclado
+        self.accept("escape", self.userExit)
+        self.accept("space", self.disparar_projetil)
+        
+        # Captura contínua de estado (Keyboard/Gamepad)
+        self.is_key_down = self.mouseWatcherNode.is_button_down
+        
+        # Exemplo no loop de atualização:
+        # if self.is_key_down(MouseButton.one()): ...
+
+```
 
 Como carregar um modelo 3D (neste caso, um cubo) e movê-lo de forma fluida registando os eventos do teclado num dicionário (`keyMap`).
 
@@ -144,7 +127,31 @@ if __name__ == "__main__":
 
 ```
 
-## Físicas Avançadas: O "Kinematic Body"
+#### 4. Gerenciamento de Áudio (Som 3D e Espacialização)
+
+O Panda3D integra gerenciadores de áudio baseados em bibliotecas como *OpenAL* e *FMOD*. Ele suporta tanto canais de som estéreo simples (para trilhas sonoras e interfaces) quanto a espacialização de áudio 3D baseada na posição relativa entre uma fonte sonora e o nó da câmera (o ouvinte).
+
+```python
+    def configurar_audio(self):
+        # Carrega um som posicional
+        self.som_motor = self.loader.load3dSound("audio/motor.ogg")
+        # Vincula o som a um nó no espaço para que ele se mova com o objeto
+        self.som_motor.attachToNode(self.carro_pai)
+        self.som_motor.setLoop(True)
+        self.som_motor.play()
+        
+        # Define as propriedades do Listener (Ouvinte) atreladas à câmera
+        self.audio3d.attachListener(self.camera)
+
+```
+
+#### 5. Pipeline de Assets Flexível (`.egg` vs. `.bam`)
+
+O ecossistema possui um pipeline de conversão transparente. Durante a produção, utiliza-se o formato `.egg` (uma sintaxe em texto plano, legível por humanos e ideal para depuração de animações, juntas e materiais). Para a distribuição comercial, a ferramenta utilitária `egg2bam` compila esses arquivos no formato `.bam`, que armazena os dados binários diretamente no formato nativo lido pela GPU, otimizando o tempo de carregamento (*loading screens*).
+
+#### 6. Integração de Física (Bullet e ODE)
+
+Embora possua um sistema de colisão embutido leve para cálculos geométricos simples, o Panda3D integra nativamente o *Bullet Physics*, um motor de simulação profissional de corpos rígidos (*Rigid Bodies*), corpos dinâmicos, cinemáticos, restrições articulares (*constraints*) e detecção de malhas complexas (*Triangle Meshes*).
 
 A integração com o motor de física **Bullet Physics**, permitindo que o nosso personagem não atravesse paredes, mas continue a ser controlado manualmente.
 
@@ -196,6 +203,68 @@ if __name__ == "__main__":
     app.run()
 
 ```
+
+#### 7. Sistemas de Partículas e Shaders Programáveis
+
+O motor opera com um pipeline moderno de renderização. Ele suporta tanto a configuração de estados de texturização automáticos quanto pipelines customizados baseados em *shaders* escritos em GLSL (OpenGL Shading Language) ou Cg. O gerador de efeitos integrado (*Shader Generator*) habilita automaticamente recursos como sombras em tempo real, mapeamento normal (*Normal Mapping*), brilho (*Bloom*) e High Dynamic Range (HDR).
+
+## 8. Interface Gráfica de Usuário (GUI)
+
+A criação de um ecrã inicial interativo utilizando o `aspect2d` (o espaço 2D dedicado às interfaces do Panda3D).
+
+```python
+from direct.showbase.ShowBase import ShowBase
+from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenText
+from direct.gui.OnscreenText import TextNode
+import sys
+
+class MenuJogo(ShowBase):
+    def __init__(self):
+        ShowBase.__init__(self)
+        self.setBackgroundColor(0.2, 0.2, 0.3)
+        
+        # Contentor principal do menu
+        self.menu_principal = DirectFrame(frameColor=(0, 0, 0, 0.7),
+                                         frameSize=(-0.5, 0.5, -0.7, 0.7))
+
+        # Título
+        OnscreenText(text="MEU JOGO 3D", parent=self.menu_principal,
+                     pos=(0, 0.5), scale=0.1, fg=(1, 1, 1, 1), align=TextNode.ACenter)
+
+        # Botões
+        self.btn_play = DirectButton(text="Jogar", scale=0.1, pos=(0, 0, 0.2),
+                                    parent=self.menu_principal, command=self.iniciar_jogo)
+
+        self.btn_tutorial = DirectButton(text="Tutorial", scale=0.1, pos=(0, 0, -0.1),
+                                        parent=self.menu_principal, command=self.mostrar_tutorial)
+
+        self.btn_sair = DirectButton(text="Sair", scale=0.1, pos=(0, 0, -0.4),
+                                     parent=self.menu_principal, command=sys.exit)
+
+    def iniciar_jogo(self):
+        print("A iniciar o jogo...")
+        self.menu_principal.hide() # Esconde o menu 
+
+    def mostrar_tutorial(self):
+        print("Tutorial: Utilize as teclas W, A, S, D para se mover!")
+
+if __name__ == "__main__":
+    app = MenuJogo()
+    app.run()
+
+```
+
+### Suporte a Equipamentos de Realidade Virtual (VR/AR)
+
+O Panda3D expandiu sua arquitetura de câmeras para suportar ecossistemas de Realidade Virtual através da integração com a API **OpenXR** e implementações legadas via *OpenVR*. Como a renderização do motor é baseada no gerenciamento de múltiplas janelas de exibição (*Display Regions*), ele consegue segmentar nativamente o processamento de visualização estereoscópica, enviando matrizes de projeção distintas com correlação de paralaxe para os displays de dispositivos como Meta Quest, HTC Vive e Valve Index.
+
+### Portabilidade e Suporte a Plataformas Mobile
+
+Historicamente projetado para sistemas desktop (Windows, Linux e macOS), o Panda3D evoluiu para suportar compilações cross-platform:
+
+* **Android:** Através do uso da biblioteca de empacotamento `pman` e suporte ao compilador embarcado, é possível compilar o núcleo do motor com suporte a chamadas OpenGL ES (versões para dispositivos móveis). O código Python roda sobre um ambiente embarcado Android via *Chaquopy* ou ferramentas similares de deploy de runtime.
+* **Web/HTML5:** Com o advento do *WebAssembly (Wasm)* e do projeto *Emscripten*, o código do Panda3D (C++) pode ser portado e compilador diretamente para rodar em navegadores web modernos com aceleração WebGL, estendendo consideravelmente o alcance dos softwares construídos sob a plataforma.
+
 
 ## O Jogo Final: "Arena de Fuga"
 
