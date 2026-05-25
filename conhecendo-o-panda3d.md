@@ -27,20 +27,24 @@ Cada elemento no espaço 3D é um `NodePath`, que atua como um ponteiro para um 
 ```python
 from direct.showbase.ShowBase import ShowBase
 
-class Game(ShowBase):
+class MeuCarro(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
         
         # Carrega um modelo (gera um NodePath)
         self.carro_pai = self.loader.loadModel("models/carro")
         self.carro_pai.reparentTo(self.render) # Define como filho da raiz espacial
-        self.carro_pai.setPos(0, 10, 0)
+        self.carro_pai.setPos(0, 10, 0) #x,y,z
         
         # Adiciona um objeto filho (ex: uma roda)
-        self.roda_filho = self.loader.loadModel("models/roda")
-        self.roda_filho.reparentTo(self.carro_pai)
-        self.roda_filho.setPos(1, 0, 0) 
-        # Se self.carro_pai for movido, self.roda_filho moverá junto mantendo o offset
+        self.roda_dianteira_direita = self.loader.loadModel("models/roda")
+        self.roda_dianteira_direita.reparentTo(self.carro_pai)
+        self.roda_dianteira_direita.setPos(1, 0, 0) 
+        # Se self.carro_pai for movido, self.roda_dianteira_direita moverá junto mantendo o offset
+
+if __name__ == "__main__":
+    app = MeuCarro()
+    app.run()
 
 ```
 

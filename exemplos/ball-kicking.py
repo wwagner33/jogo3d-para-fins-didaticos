@@ -32,8 +32,9 @@ class FisicaQuique(ShowBase):
 
         # Representação visual do chão (uma caixa muito larga e achatada)
         visual_chao = self.loader.loadModel("models/box")
-        visual_chao.setScale(20, 20, 0.1)
+        visual_chao.setScale(2000, 500, 0.5)
         visual_chao.setPos(0, 0, -0.1) # Alinha o topo da caixa com a física do plano
+        visual_chao.setColor(0.1,0.5,0.2,1)
         visual_chao.reparentTo(np_chao)
 
         # ==========================================

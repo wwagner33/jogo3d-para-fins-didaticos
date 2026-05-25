@@ -1,45 +1,47 @@
+import sys
+
 from direct.showbase.ShowBase import ShowBase
-from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletBoxShape
-from panda3d.core import Vec3
+from panda3d.core import Vec3, Point3
+from panda3d.bullet import BulletWorld, BulletRigidBodyNode, BulletSphereShape
+from panda3d.core import ClockObject
 
-class FisicaKinematic(ShowBase):
-    def __init__(self):
-        ShowBase.__init__(self)
-        self.cam.setPos(0, -20, 5)
+globalClock = ClockObject.getGlobalClock()
 
-        # 1. Configuração do Mundo Físico
-        self.world = BulletWorld()
-        self.world.setGravity(Vec3(0, 0, -9.81))
+s = ShowBase()
+s.disable_mouse()
+s.accept('escape', sys.exit)
 
-        # 2. Criar a forma de colisão (Uma caixa 1x1x1)
-        shape = BulletBoxShape(Vec3(0.5, 0.5, 0.5))
+# The physics simulation itself
+physics = BulletWorld()
+physics.setGravity(Vec3(0, 0, 0))
 
-        # 3. Criar o Nó do Corpo Rígido
-        node = BulletRigidBodyNode('JogadorKinematic')
-        node.addShape(shape)
+def step_physics(task):
+  dt = globalClock.getDt()
+  physics.doPhysics(dt)
+  return task.cont
+s.taskMgr.add(step_physics, 'physics simulation')
 
-        # --- A CONFIGURAÇÃO CHAVE ---
-        node.setKinematic(True) 
-        # O motor de física sabe que este objeto existe e bloqueia a passagem
-        # de outros objetos, mas só se move quando nós o mandarmos mover.
+# A physical object in the simulation
+node = BulletRigidBodyNode('Box')
+node.setMass(1.0)
+node.addShape(BulletSphereShape(1))
+# Attaching the physical object in the scene graph and adding
+# a visible model to it
+np = s.render.attachNewNode(node)
+np.set_pos(0, 0, 0)
+np.set_hpr(45, 0, 45)
+m = s.loader.loadModel("models/smiley")
+m.reparentTo(np)
+physics.attachRigidBody(node)
 
-        # 4. Ligar ao Grafo de Cena e ao Mundo Físico
-        self.corpo_np = self.render.attachNewNode(node)
-        self.corpo_np.setPos(0, 0, 1)
-        self.world.attachRigidBody(node)
 
-        # (Opcional) Carregar modelo visual e colar ao nó físico
-        modelo = self.loader.loadModel("models/box")
-        modelo.reparentTo(self.corpo_np)
+# Let's actually see what's happening
+base.cam.setPos(0, -10, 0)
+base.cam.lookAt(0, 0, 0)
 
-        self.taskMgr.add(self.update_fisica, "update_fisica")
-
-    def update_fisica(self, task):
-        dt = globalClock.getDt()
-        # Atualiza a simulação física
-        self.world.doPhysics(dt)
-        return task.cont
-
-if __name__ == "__main__":
-    app = FisicaKinematic()
-    app.run()
+# Give the object a nudge and run the program
+# the impulse vector is in world space, the position at which it is
+# applied is in object space.
+node.apply_impulse(Vec3(0, 0, 1), Point3(1, 0, 0))
+node.apply_impulse(Vec3(0, 0, -1), Point3(-1, 0, 0))
+s.run()

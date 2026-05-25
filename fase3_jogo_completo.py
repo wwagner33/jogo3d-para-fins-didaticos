@@ -5,7 +5,7 @@ import random
 import sys
 
 loadPrcFileData('', 'window-title Fase 3: Arena de Fuga Completa')
-loadPrcFileData('', 'win-size 800 600')
+loadPrcFileData('', 'win-size 1024 768')
 
 class JogoCompleto(ShowBase):
     def __init__(self):
@@ -32,8 +32,8 @@ class JogoCompleto(ShowBase):
         for i in range(3):
             inimigo = self.loader.loadModel("models/panda-model")
             inimigo.reparentTo(self.render)
-            inimigo.setColor(1, 0.2, 0.2, 1) # Inimigo Vermelho
-            inimigo.setScale(0.003)
+            inimigo.setColor(0.2, 0.2, 0.2, 1) # Inimigo Vermelho
+            inimigo.setScale(0.002)
             self.inimigos.append(inimigo)
             self.spawn_seguro(inimigo)
 

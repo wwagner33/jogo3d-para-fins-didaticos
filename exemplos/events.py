@@ -1,4 +1,7 @@
 from direct.showbase.ShowBase import ShowBase
+from panda3d.core import ClockObject
+
+globalClock = ClockObject.getGlobalClock()
 
 class MovimentacaoCubo(ShowBase):
     def __init__(self):
@@ -27,7 +30,7 @@ class MovimentacaoCubo(ShowBase):
     def update(self, task):
         dt = globalClock.getDt() # Delta Time
         pos = self.cubo.getPos()
-        velocidade = 10 * dt
+        velocidade = 0.5 * dt
 
         if self.keyMap["left"]:  pos.x -= velocidade
         if self.keyMap["right"]: pos.x += velocidade

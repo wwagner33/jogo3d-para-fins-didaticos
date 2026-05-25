@@ -24,7 +24,7 @@ class SceneGraph(ShowBase):
 
         # 3. Cria o NÓ PAI (Panda Pai) e anexa à raiz (render)
         self.pandaPai = Actor("models/panda-model", {"walk": "models/panda-walk4"})
-        self.pandaPai.setScale(0.005, 0.005, 0.005)
+        self.pandaPai.setScale(0.015, 0.015, 0.015)
         self.pandaPai.reparentTo(self.render)
         self.pandaPai.loop("walk")
 
@@ -36,7 +36,7 @@ class SceneGraph(ShowBase):
         
         # Como o filho está no espaço de coordenadas do pai, sua escala e 
         # posição são RELATIVAS ao pai. 
-        self.pandaFilho.setScale(0.5, 0.5, 0.5) # Ficará com metade do tamanho do pai
+        self.pandaFilho.setScale(0.7, 0.7, 0.7) # Escala relativa ao pai
         self.pandaFilho.setPos(500, -500, 0)    # Posição relativa ao centro do pai
         self.pandaFilho.loop("walk")
 
